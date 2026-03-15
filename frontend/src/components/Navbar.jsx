@@ -14,11 +14,15 @@ function Navbar({
   status,
   onConnectWallet,
   onRefreshRole,
+  isMobile,
+  manualAddress,
+  onManualAddressChange,
+  onManualAddressConnect,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [walletAvailable, setWalletAvailable] = useState(true);
   const shortWallet = account ? `${account.slice(0, 6)}...${account.slice(-4)}` : status;
-  const mobileDetected = isMobileDevice();
+  const mobileDetected = isMobile ?? isMobileDevice();
 
   const navClassName = ({ isActive }) =>
     `rounded-md px-4 py-2 text-sm font-semibold transition ${
@@ -104,10 +108,24 @@ function Navbar({
             <button className="btn-secondary w-full px-6 py-3 text-base" onClick={onRefreshRole}>
               Refresh Role
             </button>
+            {mobileDetected && (
+              <div className="space-y-2 rounded-md border bg-gray-50 p-3">
+                <p className="text-xs font-semibold text-gray-700">Mobile Manual Wallet Address</p>
+                <input
+                  className="input py-2 text-sm"
+                  placeholder="0x..."
+                  value={manualAddress}
+                  onChange={(event) => onManualAddressChange(event.target.value)}
+                />
+                <button className="btn-secondary w-full px-4 py-2 text-sm" onClick={onManualAddressConnect}>
+                  Connect Manual Address
+                </button>
+              </div>
+            )}
           </div>
         )}
 
-        {!walletAvailable && (
+        {!walletAvailable && !mobileDetected && (
           <div className="mt-4 rounded-xl border border-black bg-gray-50 p-4">
             <p className="text-sm font-semibold text-black">
               MetaMask wallet is required to use this system.
