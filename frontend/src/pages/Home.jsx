@@ -1,6 +1,20 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { getMetaMaskDownloadUrl, hasMetaMask, isMobileDevice } from "../utils/wallet";
 
 function Home({ account, role, onConnectWallet }) {
+  const [walletAvailable, setWalletAvailable] = useState(true);
+  const isMobile = isMobileDevice();
+
+  useEffect(() => {
+    async function checkWalletProvider() {
+      const available = await hasMetaMask();
+      setWalletAvailable(available);
+    }
+
+    checkWalletProvider();
+  }, []);
+
   return (
     <section className="space-y-8">
       <div className="mx-auto  space-y-6 rounded-xl border bg-white p-8 text-center shadow-sm md:p-12">
@@ -42,6 +56,28 @@ function Home({ account, role, onConnectWallet }) {
           <p className="break-all text-sm text-gray-600">
             Connected wallet: {account}
           </p>
+        )}
+        {!walletAvailable && (
+          <div className="mx-auto max-w-xl rounded-xl border border-black bg-gray-50 p-4 text-left">
+            <p className="text-sm font-semibold text-black">
+              MetaMask wallet is required to use this system.
+            </p>
+            <div className="mt-3">
+              <a
+                href={getMetaMaskDownloadUrl()}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-secondary inline-flex rounded-xl px-6 py-3 text-base"
+              >
+                Install MetaMask
+              </a>
+            </div>
+            {isMobile && (
+              <p className="mt-3 text-xs text-gray-700">
+                For best experience, open this site inside the MetaMask mobile app.
+              </p>
+            )}
+          </div>
         )}
       </div>
 

@@ -2,10 +2,35 @@ import { BrowserProvider } from "ethers";
 import { verifyEligibility } from "./contract";
 
 const REQUIRED_CHAIN_ID = Number(import.meta.env.VITE_SEPOLIA_CHAIN_ID || 11155111);
+const METAMASK_DOWNLOAD_URL = "https://metamask.io/download/";
 const ROLE_WALLETS = {
   admin: "0x17bda475397B028B26Dd3a2b413E8Ea69b045BA6".toLowerCase(),
   merchant: "0x0dc67924399d1AF0fdeA6e5050bCF64690ADa50d".toLowerCase(),
 };
+
+export function isMobileDevice() {
+  if (typeof navigator === "undefined") return false;
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+export function getMetaMaskDownloadUrl() {
+  return METAMASK_DOWNLOAD_URL;
+}
+
+function buildMetaMaskDeepLink() {
+  const currentUrl = window.location.href;
+  return `https://metamask.app.link/dapp/${encodeURIComponent(currentUrl)}`;
+}
+
+function redirectToMetaMaskMobile() {
+  const deepLink = buildMetaMaskDeepLink();
+  window.location.href = deepLink;
+
+  // If MetaMask mobile is not installed, fallback to download page.
+  window.setTimeout(() => {
+    window.location.href = METAMASK_DOWNLOAD_URL;
+  }, 1800);
+}
 
 export async function hasMetaMask() {
   return typeof window !== "undefined" && typeof window.ethereum !== "undefined";
@@ -48,8 +73,15 @@ async function assertSepolia(provider) {
 }
 
 export async function connectWallet() {
-  if (!(await hasMetaMask())) {
-    throw new Error("MetaMask is not installed.");
+  const hasProvider = await hasMetaMask();
+  if (!hasProvider) {
+    if (isMobileDevice()) {
+      redirectToMetaMaskMobile();
+      throw new Error("Opening MetaMask mobile app...");
+    }
+
+    window.location.href = METAMASK_DOWNLOAD_URL;
+    throw new Error("MetaMask wallet is required to use this system.");
   }
 
   const provider = new BrowserProvider(window.ethereum);

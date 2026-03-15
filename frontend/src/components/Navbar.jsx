@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
+import { getMetaMaskDownloadUrl, hasMetaMask, isMobileDevice } from "../utils/wallet";
 
 const navItems = [
   { to: "/", label: "Home" },
@@ -8,12 +9,23 @@ const navItems = [
 
 function Navbar({ role, account, roleTitle, status, onConnectWallet, onRefreshRole }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [walletAvailable, setWalletAvailable] = useState(true);
   const shortWallet = account ? `${account.slice(0, 6)}...${account.slice(-4)}` : status;
+  const isMobile = isMobileDevice();
 
   const navClassName = ({ isActive }) =>
     `rounded-md px-4 py-2 text-sm font-semibold transition ${
       isActive ? "bg-black text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
     }`;
+
+  useEffect(() => {
+    async function checkWalletProvider() {
+      const available = await hasMetaMask();
+      setWalletAvailable(available);
+    }
+
+    checkWalletProvider();
+  }, []);
 
   return (
     <header className="border-b border-gray-300 bg-white">
@@ -79,6 +91,29 @@ function Navbar({ role, account, roleTitle, status, onConnectWallet, onRefreshRo
             <button className="btn-secondary w-full px-6 py-3 text-base" onClick={onRefreshRole}>
               Refresh Role
             </button>
+          </div>
+        )}
+
+        {!walletAvailable && (
+          <div className="mt-4 rounded-xl border border-black bg-gray-50 p-4">
+            <p className="text-sm font-semibold text-black">
+              MetaMask wallet is required to use this system.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <a
+                href={getMetaMaskDownloadUrl()}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-secondary rounded-md px-4 py-2 text-sm"
+              >
+                Install MetaMask
+              </a>
+            </div>
+            {isMobile && (
+              <p className="mt-2 text-xs text-gray-700">
+                For best experience, open this site inside the MetaMask mobile app.
+              </p>
+            )}
           </div>
         )}
       </nav>
