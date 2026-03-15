@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getMetaMaskDownloadUrl, hasMetaMask, isMobileDevice } from "../utils/wallet";
 
-function Home({ account, role, onConnectWallet }) {
+function Home({ account, role, status, onConnectWallet }) {
   const [walletAvailable, setWalletAvailable] = useState(true);
   const isMobile = isMobileDevice();
 
@@ -57,10 +57,18 @@ function Home({ account, role, onConnectWallet }) {
             Connected wallet: {account}
           </p>
         )}
+        {!account && status && (
+          <p className="text-sm font-medium text-gray-700">{status}</p>
+        )}
+        {!account && status === "Opening MetaMask mobile app..." && (
+          <div className="mx-auto max-w-xl rounded-xl border bg-gray-50 p-3 text-sm text-gray-700">
+            Redirecting to MetaMask mobile. If nothing opens, install MetaMask and try again.
+          </div>
+        )}
         {!walletAvailable && (
           <div className="mx-auto max-w-xl rounded-xl border border-black bg-gray-50 p-4 text-left">
             <p className="text-sm font-semibold text-black">
-              MetaMask wallet is required to use this system.
+              MetaMask or a compatible wallet is required.
             </p>
             <div className="mt-3">
               <a

@@ -5,7 +5,7 @@ import Home from "./pages/Home";
 import Admin from "./pages/Admin";
 import Merchant from "./pages/Merchant";
 import Beneficiary from "./pages/Beneficiary";
-import { connectWallet, getWalletSession } from "./utils/wallet";
+import { connectWallet, disconnectWallet, getWalletSession } from "./utils/wallet";
 
 function UnauthorizedAccess() {
   return (
@@ -69,6 +69,7 @@ function App() {
 
   const handleConnectWallet = async () => {
     try {
+      setStatus("Connecting wallet...");
       const session = await connectWallet();
       setAccount(session.account);
       setRole(session.role);
@@ -87,9 +88,10 @@ function App() {
     }
   };
 
-  const handleDisconnectWallet = () => {
+  const handleDisconnectWallet = async () => {
     // MetaMask does not provide a true dApp-side disconnect for all cases.
     // This clears the local app session and returns user to guest mode.
+    await disconnectWallet();
     setAccount("");
     setRole("guest");
     setStatus("Wallet disconnected");
@@ -109,7 +111,14 @@ function App() {
         <Routes>
           <Route
             path="/"
-            element={<Home account={account} role={role} onConnectWallet={handleConnectWallet} />}
+            element={
+              <Home
+                account={account}
+                role={role}
+                status={status}
+                onConnectWallet={handleConnectWallet}
+              />
+            }
           />
           <Route
             path="/admin"

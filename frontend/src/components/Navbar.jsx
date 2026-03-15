@@ -12,6 +12,7 @@ function Navbar({ role, account, roleTitle, status, onConnectWallet, onRefreshRo
   const [walletAvailable, setWalletAvailable] = useState(true);
   const shortWallet = account ? `${account.slice(0, 6)}...${account.slice(-4)}` : status;
   const isMobile = isMobileDevice();
+  const openingMetaMaskMobile = status === "Opening MetaMask mobile app...";
 
   const navClassName = ({ isActive }) =>
     `rounded-md px-4 py-2 text-sm font-semibold transition ${
@@ -58,8 +59,16 @@ function Navbar({ role, account, roleTitle, status, onConnectWallet, onRefreshRo
               <button className="btn-secondary px-4 py-2 text-sm" onClick={onRefreshRole}>
                 Refresh Role
               </button>
-              <button className="btn-primary px-4 py-2 text-sm" onClick={onConnectWallet}>
-                {role === "guest" ? "Connect Wallet" : "Switch Wallet"}
+              <button
+                className="btn-primary px-4 py-2 text-sm"
+                onClick={onConnectWallet}
+                disabled={openingMetaMaskMobile}
+              >
+                {openingMetaMaskMobile
+                  ? "Opening MetaMask..."
+                  : role === "guest"
+                    ? "Connect Wallet"
+                    : "Switch Wallet"}
               </button>
             </div>
           </div>
@@ -85,8 +94,16 @@ function Navbar({ role, account, roleTitle, status, onConnectWallet, onRefreshRo
               </p>
               <p className="mt-1 text-sm text-gray-600">{shortWallet}</p>
             </div>
-            <button className="btn-primary w-full px-6 py-3 text-base" onClick={onConnectWallet}>
-              {role === "guest" ? "Connect Wallet" : "Switch Wallet"}
+            <button
+              className="btn-primary w-full px-6 py-3 text-base"
+              onClick={onConnectWallet}
+              disabled={openingMetaMaskMobile}
+            >
+              {openingMetaMaskMobile
+                ? "Opening MetaMask..."
+                : role === "guest"
+                  ? "Connect Wallet"
+                  : "Switch Wallet"}
             </button>
             <button className="btn-secondary w-full px-6 py-3 text-base" onClick={onRefreshRole}>
               Refresh Role
@@ -97,7 +114,7 @@ function Navbar({ role, account, roleTitle, status, onConnectWallet, onRefreshRo
         {!walletAvailable && (
           <div className="mt-4 rounded-xl border border-black bg-gray-50 p-4">
             <p className="text-sm font-semibold text-black">
-              MetaMask wallet is required to use this system.
+              MetaMask or a compatible wallet is required.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <a
