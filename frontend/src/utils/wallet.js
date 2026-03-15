@@ -1,13 +1,10 @@
 import { BrowserProvider } from "ethers";
+import { verifyEligibility } from "./contract";
 
 const REQUIRED_CHAIN_ID = Number(import.meta.env.VITE_SEPOLIA_CHAIN_ID || 11155111);
 const ROLE_WALLETS = {
   admin: "0x17bda475397B028B26Dd3a2b413E8Ea69b045BA6".toLowerCase(),
   merchant: "0x0dc67924399d1AF0fdeA6e5050bCF64690ADa50d".toLowerCase(),
-  beneficiaries: new Set([
-    "0x89CD43268B97D4cc3Fd4C6eDbC58a3f39D4ffE68".toLowerCase(),
-    "0xfAe20BA6F615346fA5c6F9C73325109D9fBFA1cF".toLowerCase(),
-  ]),
 };
 
 export async function hasMetaMask() {
@@ -22,14 +19,20 @@ export function getWalletDebugConfig() {
   };
 }
 
-export function detectWalletRole(address) {
+export async function detectWalletRole(address) {
   if (!address) return "guest";
   const normalized = address.toLowerCase();
 
   if (normalized === ROLE_WALLETS.admin) return "admin";
   if (normalized === ROLE_WALLETS.merchant) return "merchant";
-  if (ROLE_WALLETS.beneficiaries.has(normalized)) return "beneficiary";
-  return "unknown";
+
+  try {
+    const eligible = await verifyEligibility(address);
+    return eligible ? "beneficiary" : "guest";
+  } catch (error) {
+    console.error("[KalingaChain] Beneficiary role check failed.", error);
+    return "guest";
+  }
 }
 
 async function assertSepolia(provider) {
@@ -62,7 +65,7 @@ export async function connectWallet() {
     provider,
     signer,
     account,
-    role: detectWalletRole(account),
+    role: await detectWalletRole(account),
     chainId: Number(network.chainId),
     authMessage: message,
     signature,
@@ -86,6 +89,6 @@ export async function getWalletSession() {
   const account = await getConnectedAccount();
   return {
     account,
-    role: detectWalletRole(account),
+    role: await detectWalletRole(account),
   };
 }

@@ -6,7 +6,7 @@ const navItems = [
   { to: "/beneficiary", label: "Beneficiary" },
 ];
 
-function Navbar({ role, account, roleTitle, status, onConnectWallet }) {
+function Navbar({ role, account, roleTitle, status, onConnectWallet, onRefreshRole }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const shortWallet = account ? `${account.slice(0, 6)}...${account.slice(-4)}` : status;
 
@@ -43,6 +43,9 @@ function Navbar({ role, account, roleTitle, status, onConnectWallet }) {
                 Role: <span className="text-black">{roleTitle}</span>
               </p>
               <p className="rounded-md bg-gray-100 px-3 py-2 text-sm text-gray-700">{shortWallet}</p>
+              <button className="btn-secondary px-4 py-2 text-sm" onClick={onRefreshRole}>
+                Refresh Role
+              </button>
               <button className="btn-primary px-4 py-2 text-sm" onClick={onConnectWallet}>
                 {role === "guest" ? "Connect Wallet" : "Switch Wallet"}
               </button>
@@ -72,6 +75,9 @@ function Navbar({ role, account, roleTitle, status, onConnectWallet }) {
             </div>
             <button className="btn-primary w-full px-6 py-3 text-base" onClick={onConnectWallet}>
               {role === "guest" ? "Connect Wallet" : "Switch Wallet"}
+            </button>
+            <button className="btn-secondary w-full px-6 py-3 text-base" onClick={onRefreshRole}>
+              Refresh Role
             </button>
           </div>
         )}

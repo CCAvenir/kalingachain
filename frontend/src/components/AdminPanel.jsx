@@ -51,6 +51,8 @@ function AdminPanel({ account }) {
       setStatus("Issuing ID...");
       const txHash = await issueID(beneficiary);
       setStatus(`ID issued. TX: ${txHash}`);
+      // Notify the app shell to re-check connected wallet role after issuance.
+      window.dispatchEvent(new Event("kalingachain:role-refresh"));
       setBeneficiaryToIssue("");
       await refreshLogs();
     } catch (error) {

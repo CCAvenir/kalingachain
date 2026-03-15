@@ -35,21 +35,36 @@ function App() {
     if (role === "admin") return "Admin";
     if (role === "merchant") return "Merchant";
     if (role === "beneficiary") return "Beneficiary";
-    if (role === "unknown") return "Unauthorized Wallet";
     return "Guest";
   }, [role]);
 
-  useEffect(() => {
-    async function hydrateSession() {
-      const session = await getWalletSession();
-      if (!session.account) return;
-
-      setAccount(session.account);
-      setRole(session.role);
-      setStatus(session.role === "unknown" ? "Unauthorized wallet connected" : "Wallet connected");
+  const refreshWalletSession = async () => {
+    const session = await getWalletSession();
+    if (!session.account) {
+      setAccount("");
+      setRole("guest");
+      setStatus("Wallet not connected");
+      return;
     }
 
-    hydrateSession();
+    setAccount(session.account);
+    setRole(session.role);
+    setStatus("Wallet connected");
+  };
+
+  useEffect(() => {
+    refreshWalletSession();
+  }, []);
+
+  useEffect(() => {
+    const handleRoleRefreshRequest = async () => {
+      await refreshWalletSession();
+    };
+
+    window.addEventListener("kalingachain:role-refresh", handleRoleRefreshRequest);
+    return () => {
+      window.removeEventListener("kalingachain:role-refresh", handleRoleRefreshRequest);
+    };
   }, []);
 
   const handleConnectWallet = async () => {
@@ -57,9 +72,18 @@ function App() {
       const session = await connectWallet();
       setAccount(session.account);
       setRole(session.role);
-      setStatus(session.role === "unknown" ? "Unauthorized wallet connected" : "Wallet connected");
+      setStatus("Wallet connected");
     } catch (error) {
       setStatus(error.message || "Connection failed");
+    }
+  };
+
+  const handleRefreshRole = async () => {
+    try {
+      setStatus("Refreshing wallet role...");
+      await refreshWalletSession();
+    } catch (error) {
+      setStatus(error.message || "Unable to refresh role");
     }
   };
 
@@ -71,6 +95,7 @@ function App() {
         roleTitle={roleTitle}
         status={status}
         onConnectWallet={handleConnectWallet}
+        onRefreshRole={handleRefreshRole}
       />
       <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-6">
         <Routes>

@@ -8,6 +8,17 @@ function BeneficiaryDashboard({ account }) {
   const [error, setError] = useState("");
   const [history, setHistory] = useState([]);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyClearedAt, setHistoryClearedAt] = useState(0);
+
+  useEffect(() => {
+    if (!account) {
+      setHistoryClearedAt(0);
+      return;
+    }
+    const key = `kalingachain-history-cleared-at-${account.toLowerCase()}`;
+    const saved = Number(window.localStorage.getItem(key) || 0);
+    setHistoryClearedAt(Number.isFinite(saved) ? saved : 0);
+  }, [account]);
 
   useEffect(() => {
     let mounted = true;
@@ -46,6 +57,23 @@ function BeneficiaryDashboard({ account }) {
       mounted = false;
     };
   }, [account]);
+
+  const visibleHistory = history.filter((entry) => entry.timestamp > historyClearedAt);
+
+  const handleClearHistoryView = () => {
+    if (!account) return;
+    const clearedAt = Math.floor(Date.now() / 1000);
+    const key = `kalingachain-history-cleared-at-${account.toLowerCase()}`;
+    window.localStorage.setItem(key, String(clearedAt));
+    setHistoryClearedAt(clearedAt);
+  };
+
+  const handleRestoreHistoryView = () => {
+    if (!account) return;
+    const key = `kalingachain-history-cleared-at-${account.toLowerCase()}`;
+    window.localStorage.removeItem(key);
+    setHistoryClearedAt(0);
+  };
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -93,7 +121,30 @@ function BeneficiaryDashboard({ account }) {
 
           {historyOpen && (
             <>
-              {history.length === 0 ? (
+              <div className="flex flex-wrap gap-2">
+                <button
+                  className="btn-secondary rounded-xl px-4 py-2 text-sm"
+                  onClick={handleClearHistoryView}
+                  disabled={visibleHistory.length === 0}
+                >
+                  Clear History View
+                </button>
+                {historyClearedAt > 0 && (
+                  <button
+                    className="btn-secondary rounded-xl px-4 py-2 text-sm"
+                    onClick={handleRestoreHistoryView}
+                  >
+                    Show Cleared History
+                  </button>
+                )}
+              </div>
+
+              <p className="text-sm text-gray-600">
+                History is stored on-chain. Clear History View only hides previous entries on this
+                device.
+              </p>
+
+              {visibleHistory.length === 0 ? (
                 <p className="text-lg text-gray-800">No verification history yet.</p>
               ) : (
                 <div className="overflow-x-auto rounded-xl border">
@@ -105,7 +156,7 @@ function BeneficiaryDashboard({ account }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {history.slice(0, 10).map((entry, index) => (
+                      {visibleHistory.slice(0, 10).map((entry, index) => (
                         <tr key={`${entry.timestamp}-${index}`} className="bg-white">
                           <td className="border-b px-4 py-3 text-gray-800">{entry.merchant}</td>
                           <td className="border-b px-4 py-3 text-gray-800">
