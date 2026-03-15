@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { isAddress } from "ethers";
 import { QrReader } from "react-qr-reader";
 import { logVerification, verifyEligibility } from "../utils/contract";
+import { connectWallet, hasMetaMask } from "../utils/wallet";
 
 function MerchantScanner({ account }) {
   const [beneficiaryAddress, setBeneficiaryAddress] = useState("");
@@ -11,9 +12,36 @@ function MerchantScanner({ account }) {
   const [error, setError] = useState("");
   const [cameraEnabled, setCameraEnabled] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [connectingWallet, setConnectingWallet] = useState(false);
   const lastScannedRef = useRef("");
 
+  const ensureMetaMaskReady = async () => {
+    const hasWallet = await hasMetaMask();
+    if (!hasWallet) {
+      setError("MetaMask must be connected to verify and log transactions.");
+      return false;
+    }
+    return true;
+  };
+
+  const handleConnectWallet = async () => {
+    try {
+      setConnectingWallet(true);
+      setError("");
+      await connectWallet();
+      setStatus("MetaMask connected. You can now verify and log transactions.");
+      window.dispatchEvent(new Event("kalingachain:role-refresh"));
+    } catch (connectError) {
+      setError(connectError.message || "Failed to connect MetaMask.");
+    } finally {
+      setConnectingWallet(false);
+    }
+  };
+
   const handleVerify = async (walletInput) => {
+    const canProceed = await ensureMetaMaskReady();
+    if (!canProceed) return;
+
     if (!account) {
       setError("MetaMask is not connected. Connect wallet before verification.");
       return;
@@ -74,6 +102,20 @@ function MerchantScanner({ account }) {
         <p className="mt-2 break-all text-base text-gray-700">
           Merchant Wallet: <span className="font-semibold text-black">{account || "Not connected"}</span>
         </p>
+        {!account && (
+          <div className="mt-4 rounded-xl border border-black bg-gray-50 p-4">
+            <p className="text-base text-black">
+              MetaMask must be connected to verify and log transactions.
+            </p>
+            <button
+              className="btn-primary mt-3 rounded-xl px-6 py-3 text-base"
+              onClick={handleConnectWallet}
+              disabled={connectingWallet}
+            >
+              {connectingWallet ? "Connecting..." : "Connect MetaMask"}
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

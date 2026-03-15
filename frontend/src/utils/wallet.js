@@ -73,6 +73,17 @@ export async function detectWalletRole(address) {
   }
 }
 
+async function detectManualRole(address) {
+  if (!address) return "guest";
+  try {
+    const eligible = await verifyEligibility(address);
+    return eligible ? "beneficiary" : "guest";
+  } catch (error) {
+    console.error("[KalingaChain] Manual role check failed.", error);
+    return "guest";
+  }
+}
+
 async function assertSepolia(provider) {
   const network = await provider.getNetwork();
   const chainId = Number(network.chainId);
@@ -130,7 +141,8 @@ export async function connectWalletWithManualAddress(address) {
   persistSession("manual", normalized);
   return {
     account: normalized,
-    role: await detectWalletRole(normalized),
+    // Manual mode is read-only and never grants admin/merchant privileges.
+    role: await detectManualRole(normalized),
     chainId: REQUIRED_CHAIN_ID,
     provider: null,
     signer: null,
@@ -169,6 +181,12 @@ export async function getConnectedAccount() {
 
 export async function getWalletSession() {
   const account = await getConnectedAccount();
+  if (getWalletSource() === "manual") {
+    return {
+      account,
+      role: await detectManualRole(account),
+    };
+  }
   return {
     account,
     role: await detectWalletRole(account),
