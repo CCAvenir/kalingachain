@@ -1,9 +1,9 @@
 import BeneficiaryDashboard from "../components/BeneficiaryDashboard";
 
-function Beneficiary({ account }) {
+function Beneficiary({ account, onDisconnectWallet }) {
   return (
     <section className="space-y-6">
-      <BeneficiaryDashboard account={account} />
+      <BeneficiaryDashboard account={account} onDisconnectWallet={onDisconnectWallet} />
     </section>
   );
 }

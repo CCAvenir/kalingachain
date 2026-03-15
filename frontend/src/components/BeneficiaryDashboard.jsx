@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchVerificationLogs, verifyEligibility } from "../utils/contract";
 import QRDisplay from "./QRDisplay";
 
-function BeneficiaryDashboard({ account }) {
+function BeneficiaryDashboard({ account, onDisconnectWallet }) {
   const [eligible, setEligible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -105,6 +105,13 @@ function BeneficiaryDashboard({ account }) {
           <p className="text-xl text-black">
             Show this QR code to the merchant to verify your government benefits.
           </p>
+
+          <button
+            className="btn-secondary w-full rounded-xl px-6 py-4 text-lg"
+            onClick={onDisconnectWallet}
+          >
+            Disconnect Wallet
+          </button>
 
           {account && <QRDisplay address={account} />}
           {error && <p className="rounded-xl border border-black bg-white p-4 text-lg text-black">{error}</p>}

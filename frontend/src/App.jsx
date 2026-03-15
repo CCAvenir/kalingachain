@@ -87,6 +87,14 @@ function App() {
     }
   };
 
+  const handleDisconnectWallet = () => {
+    // MetaMask does not provide a true dApp-side disconnect for all cases.
+    // This clears the local app session and returns user to guest mode.
+    setAccount("");
+    setRole("guest");
+    setStatus("Wallet disconnected");
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 text-black">
       <Navbar
@@ -123,7 +131,7 @@ function App() {
             path="/beneficiary"
             element={
               <ProtectedRoute allow={["beneficiary"]} role={role}>
-                <Beneficiary account={account} role={role} />
+                <Beneficiary account={account} role={role} onDisconnectWallet={handleDisconnectWallet} />
               </ProtectedRoute>
             }
           />
