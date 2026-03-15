@@ -7,10 +7,8 @@ import Merchant from "./pages/Merchant";
 import Beneficiary from "./pages/Beneficiary";
 import {
   connectWallet,
-  connectWalletWithManualAddress,
   disconnectWallet,
   getWalletSession,
-  isMobileDevice,
 } from "./utils/wallet";
 
 function UnauthorizedAccess() {
@@ -36,8 +34,6 @@ function App() {
   const [account, setAccount] = useState("");
   const [role, setRole] = useState("guest");
   const [status, setStatus] = useState("Wallet not connected");
-  const [manualAddress, setManualAddress] = useState("");
-  const mobileDevice = isMobileDevice();
 
   const roleTitle = useMemo(() => {
     if (role === "admin") return "Admin";
@@ -96,18 +92,6 @@ function App() {
     }
   };
 
-  const handleConnectManualAddress = async () => {
-    try {
-      setStatus("Connecting manual wallet...");
-      const session = await connectWalletWithManualAddress(manualAddress.trim());
-      setAccount(session.account);
-      setRole(session.role);
-      setStatus("Manual wallet connected");
-    } catch (error) {
-      setStatus(error.message || "Manual wallet connection failed");
-    }
-  };
-
   const handleDisconnectWallet = async () => {
     // MetaMask does not provide a true dApp-side disconnect for all cases.
     // This clears the local app session and returns user to guest mode.
@@ -126,10 +110,6 @@ function App() {
         status={status}
         onConnectWallet={handleConnectWallet}
         onRefreshRole={handleRefreshRole}
-        isMobile={mobileDevice}
-        manualAddress={manualAddress}
-        onManualAddressChange={setManualAddress}
-        onManualAddressConnect={handleConnectManualAddress}
       />
       <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-6">
         <Routes>
@@ -141,10 +121,6 @@ function App() {
                 role={role}
                 status={status}
                 onConnectWallet={handleConnectWallet}
-                isMobile={mobileDevice}
-                manualAddress={manualAddress}
-                onManualAddressChange={setManualAddress}
-                onManualAddressConnect={handleConnectManualAddress}
               />
             }
           />
