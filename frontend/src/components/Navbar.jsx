@@ -7,12 +7,22 @@ const navItems = [
   { to: "/beneficiary", label: "Beneficiary" },
 ];
 
-function Navbar({ role, account, roleTitle, status, onConnectWallet, onRefreshRole }) {
+function Navbar({
+  role,
+  account,
+  roleTitle,
+  status,
+  onConnectWallet,
+  onRefreshRole,
+  isMobile,
+  manualAddress,
+  onManualAddressChange,
+  onManualAddressConnect,
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [walletAvailable, setWalletAvailable] = useState(true);
   const shortWallet = account ? `${account.slice(0, 6)}...${account.slice(-4)}` : status;
-  const isMobile = isMobileDevice();
-  const openingMetaMaskMobile = status === "Opening MetaMask mobile app...";
+  const mobileDetected = isMobile ?? isMobileDevice();
 
   const navClassName = ({ isActive }) =>
     `rounded-md px-4 py-2 text-sm font-semibold transition ${
@@ -62,13 +72,8 @@ function Navbar({ role, account, roleTitle, status, onConnectWallet, onRefreshRo
               <button
                 className="btn-primary px-4 py-2 text-sm"
                 onClick={onConnectWallet}
-                disabled={openingMetaMaskMobile}
               >
-                {openingMetaMaskMobile
-                  ? "Opening MetaMask..."
-                  : role === "guest"
-                    ? "Connect Wallet"
-                    : "Switch Wallet"}
+                {role === "guest" ? "Connect Wallet" : "Switch Wallet"}
               </button>
             </div>
           </div>
@@ -97,21 +102,30 @@ function Navbar({ role, account, roleTitle, status, onConnectWallet, onRefreshRo
             <button
               className="btn-primary w-full px-6 py-3 text-base"
               onClick={onConnectWallet}
-              disabled={openingMetaMaskMobile}
             >
-              {openingMetaMaskMobile
-                ? "Opening MetaMask..."
-                : role === "guest"
-                  ? "Connect Wallet"
-                  : "Switch Wallet"}
+              {role === "guest" ? "Connect Wallet" : "Switch Wallet"}
             </button>
             <button className="btn-secondary w-full px-6 py-3 text-base" onClick={onRefreshRole}>
               Refresh Role
             </button>
+            {mobileDetected && (
+              <div className="space-y-2 rounded-md border bg-gray-50 p-3">
+                <p className="text-xs font-semibold text-gray-700">Mobile Manual Wallet Address</p>
+                <input
+                  className="input py-2 text-sm"
+                  placeholder="0x..."
+                  value={manualAddress}
+                  onChange={(event) => onManualAddressChange(event.target.value)}
+                />
+                <button className="btn-secondary w-full px-4 py-2 text-sm" onClick={onManualAddressConnect}>
+                  Connect Manual Address
+                </button>
+              </div>
+            )}
           </div>
         )}
 
-        {!walletAvailable && (
+        {!walletAvailable && !mobileDetected && (
           <div className="mt-4 rounded-xl border border-black bg-gray-50 p-4">
             <p className="text-sm font-semibold text-black">
               MetaMask or a compatible wallet is required.
@@ -126,7 +140,7 @@ function Navbar({ role, account, roleTitle, status, onConnectWallet, onRefreshRo
                 Install MetaMask
               </a>
             </div>
-            {isMobile && (
+            {mobileDetected && (
               <p className="mt-2 text-xs text-gray-700">
                 For best experience, open this site inside the MetaMask mobile app.
               </p>

@@ -2,9 +2,18 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getMetaMaskDownloadUrl, hasMetaMask, isMobileDevice } from "../utils/wallet";
 
-function Home({ account, role, status, onConnectWallet }) {
+function Home({
+  account,
+  role,
+  status,
+  onConnectWallet,
+  isMobile,
+  manualAddress,
+  onManualAddressChange,
+  onManualAddressConnect,
+}) {
   const [walletAvailable, setWalletAvailable] = useState(true);
-  const isMobile = isMobileDevice();
+  const mobileDetected = isMobile ?? isMobileDevice();
 
   useEffect(() => {
     async function checkWalletProvider() {
@@ -60,12 +69,25 @@ function Home({ account, role, status, onConnectWallet }) {
         {!account && status && (
           <p className="text-sm font-medium text-gray-700">{status}</p>
         )}
-        {!account && status === "Opening MetaMask mobile app..." && (
-          <div className="mx-auto max-w-xl rounded-xl border bg-gray-50 p-3 text-sm text-gray-700">
-            Redirecting to MetaMask mobile. If nothing opens, install MetaMask and try again.
+        {!account && mobileDetected && (
+          <div className="mx-auto max-w-xl rounded-xl border border-black bg-gray-50 p-4 text-left">
+            <p className="text-sm font-semibold text-black">
+              Mobile detected. Enter wallet address manually to continue.
+            </p>
+            <div className="mt-3 space-y-2">
+              <input
+                className="input"
+                placeholder="0x..."
+                value={manualAddress}
+                onChange={(event) => onManualAddressChange(event.target.value)}
+              />
+              <button className="btn-secondary w-full rounded-xl px-6 py-3 text-base" onClick={onManualAddressConnect}>
+                Connect Manual Address
+              </button>
+            </div>
           </div>
         )}
-        {!walletAvailable && (
+        {!walletAvailable && !mobileDetected && (
           <div className="mx-auto max-w-xl rounded-xl border border-black bg-gray-50 p-4 text-left">
             <p className="text-sm font-semibold text-black">
               MetaMask or a compatible wallet is required.
@@ -80,7 +102,7 @@ function Home({ account, role, status, onConnectWallet }) {
                 Install MetaMask
               </a>
             </div>
-            {isMobile && (
+            {mobileDetected && (
               <p className="mt-3 text-xs text-gray-700">
                 For best experience, open this site inside the MetaMask mobile app.
               </p>
