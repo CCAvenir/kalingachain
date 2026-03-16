@@ -73,17 +73,6 @@ export async function detectWalletRole(address) {
   }
 }
 
-async function detectManualRole(address) {
-  if (!address) return "guest";
-  try {
-    const eligible = await verifyEligibility(address);
-    return eligible ? "beneficiary" : "guest";
-  } catch (error) {
-    console.error("[KalingaChain] Manual role check failed.", error);
-    return "guest";
-  }
-}
-
 async function assertSepolia(provider) {
   const network = await provider.getNetwork();
   const chainId = Number(network.chainId);
@@ -120,13 +109,13 @@ async function connectWithMetaMask() {
 }
 
 export async function connectWallet() {
+  if (isMobileDevice()) {
+    throw new Error("Mobile detected. Enter your wallet address manually.");
+  }
+
   const hasProvider = await hasMetaMask();
   if (hasProvider) {
     return connectWithMetaMask();
-  }
-
-  if (isMobileDevice()) {
-    throw new Error("Mobile detected. Enter wallet address manually.");
   }
 
   throw new Error("MetaMask is not installed. Please install MetaMask.");
@@ -134,15 +123,14 @@ export async function connectWallet() {
 
 export async function connectWalletWithManualAddress(address) {
   const normalized = address?.trim();
-  if (!normalized || !/^0x[a-fA-F0-9]{40}$/.test(normalized)) {
+  if (!normalized || !normalized.startsWith("0x") || normalized.length !== 42) {
     throw new Error("Please enter a valid wallet address.");
   }
 
   persistSession("manual", normalized);
   return {
     account: normalized,
-    // Manual mode is read-only and never grants admin/merchant privileges.
-    role: await detectManualRole(normalized),
+    role: await detectWalletRole(normalized),
     chainId: REQUIRED_CHAIN_ID,
     provider: null,
     signer: null,
@@ -184,7 +172,7 @@ export async function getWalletSession() {
   if (getWalletSource() === "manual") {
     return {
       account,
-      role: await detectManualRole(account),
+      role: await detectWalletRole(account),
     };
   }
   return {

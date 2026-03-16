@@ -37,6 +37,7 @@ function App() {
   const [role, setRole] = useState("guest");
   const [status, setStatus] = useState("Wallet not connected");
   const [manualAddress, setManualAddress] = useState("");
+  const [showMobileManualInput, setShowMobileManualInput] = useState(false);
   const mobileDevice = isMobileDevice();
 
   const roleTitle = useMemo(() => {
@@ -76,6 +77,12 @@ function App() {
   }, []);
 
   const handleConnectWallet = async () => {
+    if (mobileDevice) {
+      setShowMobileManualInput(true);
+      setStatus("Enter your wallet address manually.");
+      return;
+    }
+
     try {
       setStatus("Connecting wallet...");
       const session = await connectWallet();
@@ -103,6 +110,7 @@ function App() {
       setAccount(session.account);
       setRole(session.role);
       setStatus("Manual wallet connected");
+      setShowMobileManualInput(false);
     } catch (error) {
       setStatus(error.message || "Manual wallet connection failed");
     }
@@ -130,6 +138,7 @@ function App() {
         manualAddress={manualAddress}
         onManualAddressChange={setManualAddress}
         onManualAddressConnect={handleConnectManualAddress}
+        showMobileManualInput={showMobileManualInput}
       />
       <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-6">
         <Routes>
@@ -145,6 +154,7 @@ function App() {
                 manualAddress={manualAddress}
                 onManualAddressChange={setManualAddress}
                 onManualAddressConnect={handleConnectManualAddress}
+                showMobileManualInput={showMobileManualInput}
               />
             }
           />

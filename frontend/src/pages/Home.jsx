@@ -11,6 +11,7 @@ function Home({
   manualAddress,
   onManualAddressChange,
   onManualAddressConnect,
+  showMobileManualInput,
 }) {
   const [walletAvailable, setWalletAvailable] = useState(true);
   const mobileDetected = isMobile ?? isMobileDevice();
@@ -69,10 +70,10 @@ function Home({
         {!account && status && (
           <p className="text-sm font-medium text-gray-700">{status}</p>
         )}
-        {!account && mobileDetected && (
+        {!account && mobileDetected && showMobileManualInput && (
           <div className="mx-auto max-w-xl rounded-xl border border-black bg-gray-50 p-4 text-left">
             <p className="text-sm font-semibold text-black">
-              Mobile detected. Enter wallet address manually to continue.
+              Enter your wallet address
             </p>
             <div className="mt-3 space-y-2">
               <input

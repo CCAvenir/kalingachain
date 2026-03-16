@@ -18,6 +18,7 @@ function Navbar({
   manualAddress,
   onManualAddressChange,
   onManualAddressConnect,
+  showMobileManualInput,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [walletAvailable, setWalletAvailable] = useState(true);
@@ -108,9 +109,9 @@ function Navbar({
             <button className="btn-secondary w-full px-6 py-3 text-base" onClick={onRefreshRole}>
               Refresh Role
             </button>
-            {mobileDetected && (
+            {mobileDetected && showMobileManualInput && (
               <div className="space-y-2 rounded-md border bg-gray-50 p-3">
-                <p className="text-xs font-semibold text-gray-700">Mobile Manual Wallet Address</p>
+                <p className="text-xs font-semibold text-gray-700">Enter Wallet Address</p>
                 <input
                   className="input py-2 text-sm"
                   placeholder="0x..."
