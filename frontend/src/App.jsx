@@ -152,7 +152,7 @@ function App() {
             path="/admin"
             element={
               <ProtectedRoute allow={["admin"]} role={role}>
-                <Admin account={account} role={role} />
+                <Admin account={account} role={role} onDisconnectWallet={handleDisconnectWallet} />
               </ProtectedRoute>
             }
           />
@@ -160,7 +160,7 @@ function App() {
             path="/merchant"
             element={
               <ProtectedRoute allow={["merchant"]} role={role}>
-                <Merchant account={account} role={role} />
+                <Merchant account={account} role={role} onDisconnectWallet={handleDisconnectWallet} />
               </ProtectedRoute>
             }
           />
