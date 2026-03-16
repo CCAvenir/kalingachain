@@ -37,6 +37,19 @@ function AdminPanel({ account }) {
 
   useEffect(() => {
     refreshLogs();
+    const intervalId = window.setInterval(() => {
+      refreshLogs();
+    }, 5000);
+
+    const handleVerificationLogged = () => {
+      refreshLogs();
+    };
+    window.addEventListener("kalingachain:verification-logged", handleVerificationLogged);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("kalingachain:verification-logged", handleVerificationLogged);
+    };
   }, []);
 
   const handleIssue = async () => {
@@ -52,7 +65,7 @@ function AdminPanel({ account }) {
       const txHash = await issueID(beneficiary);
       setStatus(`ID issued. TX: ${txHash}`);
       // Notify the app shell to re-check connected wallet role after issuance.
-      window.dispatchEvent(new Event("kalingachain:role-refresh"));
+      window.dispatchEvent(new CustomEvent("kalingachain:role-refresh", { detail: { walletAddress: beneficiary } }));
       setBeneficiaryToIssue("");
       await refreshLogs();
     } catch (error) {
