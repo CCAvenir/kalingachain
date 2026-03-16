@@ -7,8 +7,9 @@ function BeneficiaryDashboard({ account, onDisconnectWallet }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [history, setHistory] = useState([]);
-  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(true);
   const [historyClearedAt, setHistoryClearedAt] = useState(0);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   useEffect(() => {
     if (!account) {
@@ -23,38 +24,53 @@ function BeneficiaryDashboard({ account, onDisconnectWallet }) {
   useEffect(() => {
     let mounted = true;
 
-    async function check() {
+    async function loadBeneficiaryData() {
       if (!account) {
-        setEligible(false);
-        setError("");
+        if (mounted) {
+          setEligible(false);
+          setHistory([]);
+          setError("");
+        }
         return;
       }
-      try {
-        setLoading(true);
-        setError("");
-        const [isEligible, logs] = await Promise.all([
-          verifyEligibility(account),
-          fetchVerificationLogs(),
-        ]);
 
+      try {
         if (mounted) {
-          setEligible(isEligible);
-          setHistory(logs.filter((entry) => entry.beneficiary.toLowerCase() === account.toLowerCase()));
+          setLoading(true);
+          setHistoryLoading(true);
+          setError("");
         }
+
+        const [isEligible, logs] = await Promise.all([verifyEligibility(account), fetchVerificationLogs()]);
+        if (!mounted) return;
+
+        setEligible(isEligible);
+        setHistory(logs.filter((entry) => entry.beneficiary.toLowerCase() === account.toLowerCase()));
       } catch (err) {
         console.error("[KalingaChain] Beneficiary eligibility check failed.", err);
         if (mounted) {
           setEligible(false);
+          setHistory([]);
           setError(err.message || "Could not verify status.");
         }
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+          setHistoryLoading(false);
+        }
       }
     }
 
-    check();
+    const handleVerificationLogged = () => {
+      loadBeneficiaryData();
+    };
+
+    loadBeneficiaryData();
+    window.addEventListener("kalingachain:verification-logged", handleVerificationLogged);
+
     return () => {
       mounted = false;
+      window.removeEventListener("kalingachain:verification-logged", handleVerificationLogged);
     };
   }, [account]);
 
@@ -119,12 +135,21 @@ function BeneficiaryDashboard({ account, onDisconnectWallet }) {
 
         <div className="card space-y-4">
           <h3 className="text-2xl font-bold text-black">Verification History</h3>
-          <button
-            className="btn-secondary w-full rounded-xl px-6 py-4 text-lg"
-            onClick={() => setHistoryOpen((value) => !value)}
-          >
-            {historyOpen ? "Hide Verification History" : "View Verification History"}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              className="btn-secondary flex-1 rounded-xl px-6 py-4 text-lg"
+              onClick={() => setHistoryOpen((value) => !value)}
+            >
+              {historyOpen ? "Hide Verification History" : "View Verification History"}
+            </button>
+            <button
+              className="btn-secondary rounded-xl px-6 py-4 text-lg"
+              onClick={() => window.dispatchEvent(new Event("kalingachain:verification-logged"))}
+              disabled={!account || historyLoading}
+            >
+              {historyLoading ? "Refreshing..." : "Refresh"}
+            </button>
+          </div>
 
           {historyOpen && (
             <>
@@ -151,7 +176,9 @@ function BeneficiaryDashboard({ account, onDisconnectWallet }) {
                 device.
               </p>
 
-              {visibleHistory.length === 0 ? (
+              {historyLoading ? (
+                <p className="text-lg text-gray-800">Loading verification history...</p>
+              ) : visibleHistory.length === 0 ? (
                 <p className="text-lg text-gray-800">No verification history yet.</p>
               ) : (
                 <div className="overflow-x-auto rounded-xl border">

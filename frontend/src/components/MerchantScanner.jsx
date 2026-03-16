@@ -65,16 +65,14 @@ function MerchantScanner({ account }) {
       const isEligible = await verifyEligibility(beneficiary);
       setEligible(isEligible);
 
-      if (isEligible) {
-        // Persist each eligible merchant check on-chain for auditable verification history.
-        setStatus("Logging verification on-chain...");
-        const hash = await logVerification(beneficiary);
-        setTxHash(hash);
-        setStatus("Verification complete.");
-        window.dispatchEvent(new Event("kalingachain:verification-logged"));
-      } else {
-        setStatus("Beneficiary is not eligible. Verification log not recorded.");
-      }
+      // Persist each merchant check on-chain for auditable verification history.
+      setStatus("Logging verification on-chain...");
+      const hash = await logVerification(beneficiary);
+      setTxHash(hash);
+      setStatus(
+        isEligible ? "Verification complete: beneficiary is eligible." : "Verification complete: beneficiary is not eligible.",
+      );
+      window.dispatchEvent(new Event("kalingachain:verification-logged"));
       setBeneficiaryAddress(beneficiary);
     } catch (error) {
       console.error("[KalingaChain] Merchant verification failed.", error);
